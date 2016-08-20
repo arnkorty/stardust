@@ -5,14 +5,14 @@ export default class FormGroupEvenlyDividedExample extends Component {
   render() {
     return (
       <Form>
-        <Form.Fields evenlyDivided>
+        <Form.Group evenlyDivided>
           <Form.Field label='First name'>
             <Input placeholder='First name' />
           </Form.Field>
           <Form.Field label='Last name'>
             <Input placeholder='Last name' />
           </Form.Field>
-        </Form.Fields>
+        </Form.Group>
       </Form>
     )
   }

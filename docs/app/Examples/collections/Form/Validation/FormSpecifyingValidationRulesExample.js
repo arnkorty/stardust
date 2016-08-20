@@ -26,7 +26,7 @@ const skillsOptions = [
 const FormSpecifyingValidationRulesExample = (props) => (
   <Form className='segment' fields={fields}>
     <p>Tell Us About Yourself</p>
-    <Form.Fields evenlyDivided>
+    <Form.Group evenlyDivided>
       <Form.Field>
         <label>Name</label>
         <Input placeholder='First Name' name='name' type='text' />
@@ -34,15 +34,15 @@ const FormSpecifyingValidationRulesExample = (props) => (
       <Form.Field label='Gender'>
         <Select name='gender' options={genderOptions} />
       </Form.Field>
-    </Form.Fields>
-    <Form.Fields evenlyDivided>
+    </Form.Group>
+    <Form.Group evenlyDivided>
       <Form.Field label='Username'>
         <Input placeholder='Username' name='username' type='text' />
       </Form.Field>
       <Form.Field label='Password'>
         <Input type='password' name='password' />
       </Form.Field>
-    </Form.Fields>
+    </Form.Group>
     <Form.Field label='Skills'>
       <Select multiple name='skills' options={skillsOptions} />
     </Form.Field>

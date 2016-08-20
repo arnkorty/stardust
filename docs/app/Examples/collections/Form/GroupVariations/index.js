@@ -8,7 +8,7 @@ export default class FormGroupVariationsExamples extends Component {
       <ExampleSection title='Group Variations'>
         <ComponentExample
           title='Evenly Divided'
-          description='Fields can have their widths divided evenly.'
+          description='Groups can have their Field widths divided evenly.'
           examplePath='collections/Form/GroupVariations/FormGroupEvenlyDividedExample'
         />
       </ExampleSection>

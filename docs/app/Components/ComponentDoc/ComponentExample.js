@@ -12,10 +12,10 @@ import { Grid, Header, Icon } from 'stardust'
 export default class ComponentExample extends Component {
   static propTypes = {
     children: PropTypes.node,
-    description: PropTypes.string,
+    description: PropTypes.node,
     examplePath: PropTypes.string.isRequired,
     exampleSrc: PropTypes.node,
-    title: PropTypes.string,
+    title: PropTypes.node,
   }
 
   constructor(props, context) {

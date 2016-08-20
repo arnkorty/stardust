@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Form, Checkbox, Field } from 'stardust'
+import { Form, Checkbox, } from 'stardust'
 
 export default class CheckboxDisabledExample extends Component {
   render() {
