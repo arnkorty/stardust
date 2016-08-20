@@ -1,143 +1,219 @@
 import cx from 'classnames'
-import $ from 'jquery'
 import _ from 'lodash'
-import React, { Component, PropTypes } from 'react'
+import React, { PropTypes } from 'react'
 
 import {
-  deprecateProps,
   getElementType,
   getUnhandledProps,
   META,
+  SUI,
+  useKeyOnly,
+  useWidthProp,
 } from '../../lib'
 import FormField from './FormField'
-import FormFields from './FormFields'
+import FormButton from './FormButton'
+import FormCheckbox from './FormCheckbox'
+import FormDropdown from './FormDropdown'
+import FormGroup from './FormGroup'
+import FormInput from './FormInput'
+import FormRadio from './FormRadio'
+import FormSelect from './FormSelect'
+import FormTextArea from './FormTextArea'
 
-export default class Form extends Component {
-  static propTypes = {
-    /** An element type to render as (string or function). */
-    as: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.func,
-    ]),
+function formSerializer(formNode) {
+  const json = {}
+  // handle empty formNode ref
+  if (!formNode) return json
 
-    children: PropTypes.node,
-    className: PropTypes.string,
-    settings: PropTypes.shape({
-      on: PropTypes.string,
-      inline: PropTypes.bool,
-      fields: PropTypes.object,
-    }),
+  // ----------------------------------------
+  // Checkboxes
+  // Single: { name: value|bool        }
+  // Group:  { name: [value|bool, ...] }
 
-    // form settings
-    keyboardShortcuts: PropTypes.bool,
-    on: PropTypes.oneOf([
-      'blur',
-      'change',
-      'submit',
-    ]),
-    revalidate: PropTypes.bool,
-    delay: PropTypes.bool,
-    inline: PropTypes.bool,
-    transition: PropTypes.string,
-    duration: PropTypes.number,
-    // callbacks
-    onValid: PropTypes.func,
-    onInvalid: PropTypes.func,
-    onSuccess: PropTypes.func,
-    onFailure: PropTypes.func,
-    fields: PropTypes.object,
-  }
+  _.each(formNode.querySelectorAll('input[type="checkbox"]'), (node, index, arr) => {
+    const name = node.getAttribute('name')
+    const checkboxesByName = _.filter(arr, { name })
 
-  static defaultProps = {
-    as: 'form',
-    // prevent submit by default
-    // https://github.com/Semantic-Org/Semantic-UI/issues/546
-    onSuccess: () => false,
-  }
+    // single: (value|checked)
+    if (checkboxesByName.length === 1) {
+      json[name] = node.checked && node.value !== 'on' ? node.value : node.checked
+      return
+    }
 
-  constructor(props, context) {
-    super(props, context)
-    deprecateProps(this, {
-      settings: 'Use a separate prop for each setting.',
-    })
-  }
+    // groups (checked): [value, ...]
+    if (!Array.isArray(json[name])) json[name] = []
+    if (node.checked) json[name].push(node.value)
 
-  componentDidMount() {
-    this.refresh()
-  }
+    // in dev, warn about multiple checkboxes with a default browser value of "on"
+    if (process.NODE_ENV !== 'production' && node.value === 'on') {
+      const errorMessage = [
+        "Encountered a checkbox in a group with the default browser value 'on'.",
+        'Each checkbox in a group should have a unique value.',
+        "Otherwise, the checkbox value will serialize as ['on', ...].",
+      ].join(' ')
+      console.error(errorMessage, node, formNode) // eslint-disable-line no-console
+    }
+  })
 
-  componentDidUpdate(prevProps, prevState) {
-    this.refresh()
-  }
+  // ----------------------------------------
+  // Radios
+  // checked: { name: checked value }
+  // none:    { name: null }
 
-  componentWillUnmount() {
-    _.invoke(this, 'element.off')
-  }
+  _.each(formNode.querySelectorAll('input[type="radio"]'), (node, index, arr) => {
+    const name = node.getAttribute('name')
+    const checkedRadio = _.find(arr, { name, checked: true })
 
-  static _meta = {
-    name: 'Form',
-    type: META.TYPES.COLLECTION,
-  }
+    if (checkedRadio) {
+      json[name] = checkedRadio.value
+    } else {
+      json[name] = null
+    }
 
-  static Field = FormField
-  static Fields = FormFields
+    // in dev, warn about radios with a default browser value of "on"
+    if (process.NODE_ENV !== 'production' && node.value === 'on') {
+      const errorMessage = [
+        "Encountered a radio with the default browser value 'on'.",
+        'Each radio should have a unique value.',
+        "Otherwise, the radio value will serialize as { [name]: 'on' }.",
+      ].join(' ')
+      console.error(errorMessage, node, formNode) // eslint-disable-line no-console
+    }
+  })
 
-  plugin(...args) {
-    return this.element.form(...args)
-  }
+  // ----------------------------------------
+  // Other inputs and text areas
+  // { name: value }
 
-  refresh() {
-    this.element = $(this.refs.element)
-    this.element.form(_.pick(this.props, [
-      'keyboardShortcuts',
-      // validation
-      'delay', 'duration', 'fields', 'on', 'inline', 'revalidate', 'transition',
-      // callbacks
-      'onValid', 'onInvalid', 'onSuccess', 'onFailure',
-    ]))
-  }
+  _.each(formNode.querySelectorAll([
+    'input:not([type="radio"]):not([type="checkbox"])',
+    'textarea',
+  ].join(', ')), (node) => {
+    json[node.getAttribute('name')] = node.value
+  })
 
-  serializeJson = () => {
-    const form = this.refs.element
-    const json = {}
+  // ----------------------------------------
+  // Selects
+  // single:   { name: value }
+  // multiple: { name: [value, ...] }
 
-    _.each(['input', 'textarea', 'select'], (tag) => {
-      _.each(form.getElementsByTagName(tag), (node, index, arr) => {
-        const name = node.getAttribute('name')
+  _.each(formNode.querySelectorAll('select'), (node) => {
+    const name = node.getAttribute('name')
 
-        switch (node.getAttribute('type')) {
-          case 'checkbox':
-            json[name] = { checked: node.checked }
-            break
+    if (node.multiple) {
+      json[name] = _.map(_.filter(node.querySelectorAll('option'), 'selected'), 'value')
+    } else {
+      json[name] = node.value
+    }
+  })
 
-          case 'radio':
-            json[name] = {
-              value: _.find(arr, { name, checked: true }).value,
-            }
-            break
-
-          default:
-            json[name] = { value: node.value }
-            break
-        }
-      })
-    })
-
-    return json
-  }
-
-  render() {
-    const classes = cx(
-      'ui',
-      this.props.className,
-      'form'
-    )
-    const props = getUnhandledProps(Form, this.props)
-    const ElementType = getElementType(Form, this.props)
-    return (
-      <ElementType {...props} className={classes} ref='element'>
-        {this.props.children}
-      </ElementType>
-    )
-  }
+  return json
 }
+
+/**
+ * A Form displays a set of related user input fields in a structured way.
+ * @see Button
+ * @see Checkbox
+ * @see Dropdown
+ * @see Input
+ * @see Message
+ * @see Radio
+ * @see Select
+ * @see TextArea
+ */
+function Form(props) {
+  const { className, children, error, loading, onChange, size, success, warning, widths } = props
+  const classes = cx(
+    'ui',
+    size,
+    useKeyOnly(loading, 'loading'),
+    useKeyOnly(success, 'success'),
+    useKeyOnly(error, 'error'),
+    useKeyOnly(warning, 'warning'),
+    useWidthProp(widths, null, true),
+    'form',
+    className,
+  )
+  const rest = getUnhandledProps(Form, props)
+  const ElementType = getElementType(Form, props)
+  let _form
+
+  const handleChange = (e) => {
+    if (onChange) onChange(e, props.serializer(_form))
+  }
+
+  return (
+    <ElementType
+      {...rest}
+      className={classes}
+      onChange={handleChange}
+      ref={(c) => (_form = _form || c)}
+    >
+      {children}
+    </ElementType>
+  )
+}
+
+Form.Field = FormField
+Form.Button = FormButton
+Form.Checkbox = FormCheckbox
+Form.Dropdown = FormDropdown
+Form.Group = FormGroup
+Form.Input = FormInput
+Form.Radio = FormRadio
+Form.Select = FormSelect
+Form.TextArea = FormTextArea
+
+Form._meta = {
+  name: 'Form',
+  type: META.TYPES.COLLECTION,
+  props: {
+    widths: ['equal'],
+    size: _.without(SUI.SIZES, 'medium'),
+  },
+}
+
+Form.propTypes = {
+  /** An element type to render as (string or function). */
+  as: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.func,
+  ]),
+
+  /** Primary content */
+  children: PropTypes.node,
+
+  /** Additional classes */
+  className: PropTypes.string,
+
+  /** Automatically show a loading indicator */
+  loading: PropTypes.bool,
+
+  /** Automatically show any success Message children */
+  success: PropTypes.bool,
+
+  /** Automatically show any error Message children */
+  error: PropTypes.bool,
+
+  /** Automatically show any warning Message children */
+  warning: PropTypes.bool,
+
+  /** A form can vary in size */
+  size: PropTypes.oneOf(Form._meta.props.size),
+
+  /** Forms can automatically divide fields to be equal width */
+  widths: PropTypes.oneOf(Form._meta.props.widths),
+
+  /** Called onChange with the form node that returns the serialized form object */
+  serializer: PropTypes.func,
+
+  /** Called with (event, jsonSerializedForm) on change */
+  onChange: PropTypes.func,
+}
+
+Form.defaultProps = {
+  as: 'form',
+  serializer: formSerializer,
+}
+
+export default Form
