@@ -754,7 +754,7 @@ describe('Dropdown Component', () => {
   describe('options', () => {
     it('adds the onClick handler to all items', () => {
       wrapperShallow(<Dropdown options={options} selection />)
-        .children('DropdownItem')
+        .find('DropdownItem')
         .everyWhere(item => item.should.have.prop('onClick'))
     })
     it('calls handleItemClick when an item is clicked', () => {
@@ -804,6 +804,17 @@ describe('Dropdown Component', () => {
 
       newItem.should.have.prop('text', 'bar')
       newItem.should.have.prop('value', 'bar')
+    })
+
+    it('passes options as props', () => {
+      const customOptions = [
+        { text: 'abra', value: 'abra', 'data-foo': 'someValue' },
+        { text: 'cadabra', value: 'cadabra', 'data-foo': 'someValue' },
+        { text: 'bang', value: 'bang', 'data-foo': 'someValue' },
+      ]
+      wrapperShallow(<Dropdown options={customOptions} selection />)
+        .find('DropdownItem')
+        .everyWhere(item => item.should.have.prop('data-foo', 'someValue'))
     })
   })
 
@@ -1009,6 +1020,42 @@ describe('Dropdown Component', () => {
       wrapper
         .find('.message')
         .should.not.be.present()
+    })
+
+    it('uses default noResultsMessage', () => {
+      const search = wrapperMount(<Dropdown options={options} selection search />)
+        .find('input.search')
+
+      // search for something we know will not exist
+      search.simulate('change', { target: { value: '_________________' } })
+
+      wrapper
+        .find('.message')
+        .should.have.text('No results found.')
+    })
+
+    it('uses custom noResultsMessage', () => {
+      const search = wrapperMount(<Dropdown options={options} selection search noResultsMessage='Something custom' />)
+        .find('input.search')
+
+      // search for something we know will not exist
+      search.simulate('change', { target: { value: '_________________' } })
+
+      wrapper
+        .find('.message')
+        .should.have.text('Something custom')
+    })
+
+    it('uses no noResultsMessage', () => {
+      const search = wrapperMount(<Dropdown options={options} selection search noResultsMessage='' />)
+        .find('input.search')
+
+      // search for something we know will not exist
+      search.simulate('change', { target: { value: '_________________' } })
+
+      wrapper
+        .find('.message')
+        .should.have.text('')
     })
   })
 
