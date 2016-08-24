@@ -66,7 +66,6 @@ export default class ComponentProps extends Component {
 
     return (
       <div>
-        <Header.H2>Props</Header.H2>
         <Table data={content} className='very basic compact'>
           <Table.Column dataKey='name' cellRenderer={this.nameRenderer} />
           <Table.Column cellRenderer={this.requiredRenderer} />
