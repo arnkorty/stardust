@@ -11,6 +11,7 @@ const Types = () => {
         description='A menu'
         examplePath='collections/Menu/Types/Width'
       />
+      <ComponentExample examplePath='collections/Menu/Types/Names' />
     </ExampleSection>
   )
 }

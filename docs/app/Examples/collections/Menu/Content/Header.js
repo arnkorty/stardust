@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { Menu } from 'stardust'
 
 export default class Header extends Component {
-  handleItemClick = (name) => this.setState({ activeItem: name })
+  handleItemClick = (e, name) => this.setState({ activeItem: name })
 
   render() {
     const { activeItem } = this.state
@@ -12,22 +12,25 @@ export default class Header extends Component {
         <Menu.Item header>Our Company</Menu.Item>
 
         <Menu.Item
+          name='about'
           active={activeItem === 'about'}
-          onClick={() => this.handleItemClick('about')}
+          onClick={this.handleItemClick}
         >
           About us
         </Menu.Item>
 
         <Menu.Item
+          name='jobs'
           active={activeItem === 'jobs'}
-          onClick={this.handleItemClick.bind('jobs')}
+          onClick={this.handleItemClick}
         >
           Jobs
         </Menu.Item>
 
         <Menu.Item
+          name='locations'
           active={activeItem === 'locations'}
-          onClick={this.handleItemClick.bind('locations')}
+          onClick={this.handleItemClick}
         >
           Locations
         </Menu.Item>

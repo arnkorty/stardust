@@ -24,13 +24,7 @@ const _meta = {
 /**
  * A menu displays grouped navigation actions.
  * */
-export default class Menu extends Component {
-  static _meta = _meta
-
-  static autoControlledProps = [
-    'activeIndex',
-  ]
-
+class Menu extends Component {
   static propTypes = {
     /** Index of the currently active item. */
     activeIndex: PropTypes.number,
@@ -54,11 +48,15 @@ export default class Menu extends Component {
     widths: PropTypes.oneOf(_meta.props.widths),
   }
 
+  static _meta = _meta
+
+  static autoControlledProps = [
+    'activeIndex',
+  ]
+
   static Header = MenuHeader
   static Item = MenuItem
   static Menu = MenuMenu
-
-  state = {}
 
   // componentWillMount() {
   //   super.componentWillMount()
@@ -111,3 +109,5 @@ export default class Menu extends Component {
     return <div {...rest} className={classes}>{children}</div>
   }
 }
+
+export default Menu

@@ -17,11 +17,16 @@ function MenuItem(props) {
     position,
     'item',
   )
-  const handleClick = (e) => {
-    if (onClick) onClick(e)
-  }
   const rest = getUnhandledProps(MenuItem, props)
+
+  const handleClick = (e) => {
+    if (onClick) onClick(e, name)
+  }
   const ItemComponent = href || onClick ? 'a' : 'div'
+
+  if (!children && name) {
+    return <ItemComponent {...rest} className={classes} onClick={handleClick}>{name}</ItemComponent>
+  }
 
   return <ItemComponent {...rest} className={classes} onClick={handleClick}>{children}</ItemComponent>
 }
@@ -53,6 +58,9 @@ MenuItem.propTypes = {
 
   /** Render as an `a` tag instead of a `div` and adds the href attribute. */
   href: PropTypes.string,
+
+  /** Internal name of the MenuItem. */
+  name: PropTypes.string,
 
   /** Render as an `a` tag instead of a `div` and called with event on MenuItem click. */
   onClick: PropTypes.func,
