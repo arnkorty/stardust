@@ -108,11 +108,15 @@ export default class Checkbox extends Component {
 
   handleClick = (e) => {
     debug('handleClick()')
+    debug('firing change event')
+    const simulant = require('simulant')
+    simulant.fire(this._input, 'change', e)
+
     const { disabled, onChange, onClick, name, readOnly, value } = this.props
     // using a ref here allows us to let the browser manage radio group state for us
     // this is a special exception where we are reading state from the DOM
     // otherwise, all radio groups would have to be controlled components
-    const refChecked = _.get(this.refs, 'input.checked')
+    const refChecked = this._input.checked
     debug(`  name:       ${name}`)
     debug(`  value:      ${value}`)
     debug(`  refChecked: ${refChecked}`)
@@ -123,6 +127,17 @@ export default class Checkbox extends Component {
     if (!disabled && !readOnly) {
       this.trySetState({ checked: !refChecked })
     }
+  }
+
+  handleChange = (e) => {
+    debug('handleChange()')
+    const { name, onChange, value } = this.props
+    const refChecked = this._input.checked
+    debug(`  name:       ${name}`)
+    debug(`  value:      ${value}`)
+    debug(`  refChecked: ${refChecked}`)
+
+    if (onChange) onChange(e, { name, value, checked: !refChecked })
   }
 
   render() {
@@ -150,13 +165,15 @@ export default class Checkbox extends Component {
         {...rest}
         className={classes}
         onClick={this.handleClick}
-        onChange={onChange || _.noop}
+        onChange={this.handleChange}
       >
         <input
-          ref='input'
+          ref={c => {
+            if (c !== null) this._input = c
+          }}
           type={inputType || typeMap[type]}
           name={name}
-          onChange={onChange || _.noop}
+          onChange={this.handleChange}
           checked={checked}
           className='hidden'
           tabIndex={0}
