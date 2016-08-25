@@ -1,17 +1,18 @@
 import React, { PropTypes } from 'react'
 
-import { META, getElementType } from '../../lib'
+import { getElementType, getUnhandledProps, META } from '../../lib'
 import { Checkbox } from '../../modules'
 
 /**
- * A <Radio /> is sugar for <Checkbox type='radio' inputType='radio' />.
+ * A Radio is sugar for <Checkbox type='radio' inputType='radio' />.
  * Useful for exclusive groups of type='slider' or type='toggle'.
  * @see Checkbox
  * @see Form
  */
 function Radio(props) {
   const ElementType = getElementType(Radio, props)
-  return <ElementType {...props} type='radio' inputType='radio' />
+  const rest = getUnhandledProps(Radio, props)
+  return <ElementType {...rest} />
 }
 
 Radio._meta = {
@@ -29,6 +30,8 @@ Radio.propTypes = {
 
 Radio.defaultProps = {
   as: Checkbox,
+  inputType: 'radio',
+  type: 'radio',
 }
 
 export default Radio
