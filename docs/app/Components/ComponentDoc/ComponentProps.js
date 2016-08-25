@@ -28,7 +28,12 @@ export default class ComponentProps extends Component {
     }
   }
   defaultValueRenderer = (item) => {
-    const defaultValue = _.get(item, 'defaultValue.value')
+    let defaultValue = _.get(item, 'defaultValue.value')
+
+    if (_.startsWith(defaultValue, 'function ')) {
+      defaultValue = defaultValue.match(/^function(.*)\{/)[1].trim() + ' { ... }'
+    }
+
     const defaultIsComputed = <span className='ui mini gray circular label'>computed</span>
 
     return (
